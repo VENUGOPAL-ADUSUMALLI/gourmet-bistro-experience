@@ -12,19 +12,69 @@ import {
 import { useToast } from "@/components/ui/use-toast";
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/providers/AuthProvider";
 
 export const ReservationForm = () => {
   const [date, setDate] = useState<Date>();
   const [time, setTime] = useState("");
   const [guests, setGuests] = useState("2");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast({
-      title: "Reservation Requested",
-      description: `Table for ${guests} on ${date ? format(date, 'PPP') : ''} at ${time}`,
-    });
+    
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to make a reservation",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!date || !time) {
+      toast({
+        title: "Missing Information",
+        description: "Please select both date and time for your reservation",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const { error } = await supabase
+        .from('reservations')
+        .insert({
+          date: format(date, 'yyyy-MM-dd'),
+          time,
+          guests: parseInt(guests),
+          user_id: user.id,
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Reservation Confirmed",
+        description: `Your table for ${guests} on ${format(date, 'PPP')} at ${time} has been reserved.`,
+      });
+
+      // Reset form
+      setDate(undefined);
+      setTime("");
+      setGuests("2");
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Failed to create reservation. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -60,6 +110,7 @@ export const ReservationForm = () => {
               selected={date}
               onSelect={setDate}
               initialFocus
+              disabled={(date) => date < new Date()}
             />
           </PopoverContent>
         </Popover>
@@ -76,8 +127,12 @@ export const ReservationForm = () => {
         />
       </div>
 
-      <Button type="submit" className="w-full bg-gold hover:bg-gold-dark">
-        Request Reservation
+      <Button 
+        type="submit" 
+        className="w-full bg-gold hover:bg-gold-dark"
+        disabled={isSubmitting}
+      >
+        {isSubmitting ? "Submitting..." : "Request Reservation"}
       </Button>
     </form>
   );
