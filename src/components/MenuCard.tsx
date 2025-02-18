@@ -1,12 +1,16 @@
 
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Plus } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/providers/AuthProvider";
 
 interface MenuItemProps {
+  id: string;
   name: string;
   description: string;
   price: number;
@@ -17,6 +21,7 @@ interface MenuItemProps {
 }
 
 export const MenuCard = ({
+  id,
   name,
   description,
   price,
@@ -26,20 +31,52 @@ export const MenuCard = ({
   vegetarian
 }: MenuItemProps) => {
   const { toast } = useToast();
-  const [isHovered, setIsHovered] = useState(false);
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(false);
 
-  const handleAddToCart = () => {
-    toast({
-      title: "Added to cart",
-      description: `${name} has been added to your cart.`,
-    });
+  const handleAddToCart = async () => {
+    if (!user) {
+      toast({
+        title: "Please sign in",
+        description: "You need to be signed in to add items to your cart",
+      });
+      navigate("/auth");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { error } = await supabase
+        .from('cart_items')
+        .insert([
+          {
+            user_id: user.id,
+            menu_item_id: id,
+            quantity: 1
+          }
+        ]);
+
+      if (error) throw error;
+
+      toast({
+        title: "Added to cart",
+        description: `${name} has been added to your cart.`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <Card 
       className="menu-item-card"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
     >
       <div className="relative aspect-video overflow-hidden rounded-t-lg">
         <img
@@ -63,9 +100,11 @@ export const MenuCard = ({
         <p className="text-muted-foreground text-sm mb-4">{description}</p>
         <Button 
           onClick={handleAddToCart}
+          disabled={loading}
           className="w-full bg-gold hover:bg-gold-dark transition-colors"
         >
-          <Plus className="mr-2 h-4 w-4" /> Add to Cart
+          <Plus className="mr-2 h-4 w-4" /> 
+          {loading ? "Adding..." : "Add to Cart"}
         </Button>
       </div>
     </Card>

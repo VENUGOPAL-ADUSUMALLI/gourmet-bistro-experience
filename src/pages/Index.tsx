@@ -1,38 +1,41 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { MenuCard } from "@/components/MenuCard";
 import { ReservationForm } from "@/components/ReservationForm";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
-const menuItems = [
-  {
-    name: "Truffle Risotto",
-    description: "Creamy Arborio rice with black truffle and aged Parmesan",
-    price: 28,
-    image: "/placeholder.svg",
-    category: "Mains",
-    vegetarian: true
-  },
-  {
-    name: "Wagyu Steak",
-    description: "Grade A5 Japanese Wagyu with roasted vegetables",
-    price: 45,
-    image: "/placeholder.svg",
-    category: "Mains"
-  },
-  {
-    name: "Lobster Thermidor",
-    description: "Fresh Maine lobster in a rich brandy cream sauce",
-    price: 42,
-    image: "/placeholder.svg",
-    category: "Seafood"
-  }
-];
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState("menu");
+  const [menuItems, setMenuItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    async function fetchMenuItems() {
+      try {
+        const { data, error } = await supabase
+          .from('menu_items')
+          .select('*');
+
+        if (error) throw error;
+        setMenuItems(data);
+      } catch (error: any) {
+        toast({
+          title: "Error",
+          description: "Failed to load menu items",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchMenuItems();
+  }, [toast]);
 
   return (
     <div className="min-h-screen">
@@ -76,11 +79,15 @@ const Index = () => {
                 Discover our carefully curated selection of dishes, prepared with the finest ingredients
               </p>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {menuItems.map((item) => (
-                <MenuCard key={item.name} {...item} />
-              ))}
-            </div>
+            {loading ? (
+              <div className="text-center">Loading menu items...</div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {menuItems.map((item) => (
+                  <MenuCard key={item.id} {...item} />
+                ))}
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="reservations" className="space-y-8">
