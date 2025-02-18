@@ -7,12 +7,30 @@ import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { ShoppingCart } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/providers/AuthProvider";
+import { useQuery } from "@tanstack/react-query";
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState("menu");
   const [menuItems, setMenuItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+
+  const { data: cartItemsCount = 0 } = useQuery({
+    queryKey: ["cartCount", user?.id],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from("cart_items")
+        .select("*", { count: "exact" })
+        .eq("user_id", user?.id);
+      return count || 0;
+    },
+    enabled: !!user,
+  });
 
   useEffect(() => {
     async function fetchMenuItems() {
@@ -39,11 +57,28 @@ const Index = () => {
 
   return (
     <div className="min-h-screen">
+      {/* Cart Icon */}
+      <div className="fixed top-4 right-4 z-50">
+        <Button
+          variant="outline"
+          size="icon"
+          className="relative"
+          onClick={() => navigate("/cart")}
+        >
+          <ShoppingCart className="h-6 w-6" />
+          {cartItemsCount > 0 && (
+            <span className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
+              {cartItemsCount}
+            </span>
+          )}
+        </Button>
+      </div>
+
       {/* Hero Section */}
       <section className="relative h-screen flex items-center justify-center text-center parallax">
         <div className="absolute inset-0 bg-black/50 z-10" />
         <img
-          src="/placeholder.svg"
+          src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4"
           alt="Gourmet dishes"
           className="absolute inset-0 w-full h-full object-cover"
         />
@@ -108,3 +143,4 @@ const Index = () => {
 };
 
 export default Index;
+
