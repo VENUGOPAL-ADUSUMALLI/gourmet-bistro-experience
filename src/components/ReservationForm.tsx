@@ -14,14 +14,25 @@ import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/providers/AuthProvider";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export const ReservationForm = () => {
   const [date, setDate] = useState<Date>();
   const [time, setTime] = useState("");
   const [guests, setGuests] = useState("2");
+  const [tableNumber, setTableNumber] = useState<string>();
+  const [capacity, setCapacity] = useState("4");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
+
+  const tables = Array.from({ length: 10 }, (_, i) => i + 1); // Assuming 10 tables
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,6 +64,8 @@ export const ReservationForm = () => {
           time,
           guests: parseInt(guests),
           user_id: user.id,
+          table_number: tableNumber ? parseInt(tableNumber) : null,
+          capacity: parseInt(capacity),
         });
 
       if (error) throw error;
@@ -66,6 +79,8 @@ export const ReservationForm = () => {
       setDate(undefined);
       setTime("");
       setGuests("2");
+      setTableNumber(undefined);
+      setCapacity("4");
     } catch (error: any) {
       toast({
         title: "Error",
@@ -79,17 +94,50 @@ export const ReservationForm = () => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 max-w-md mx-auto">
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="guests">Number of Guests</Label>
+          <Input
+            id="guests"
+            type="number"
+            min="1"
+            max="10"
+            value={guests}
+            onChange={(e) => setGuests(e.target.value)}
+            className="w-full"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="capacity">Table Capacity</Label>
+          <Select value={capacity} onValueChange={setCapacity}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select capacity" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="2">2 People</SelectItem>
+              <SelectItem value="4">4 People</SelectItem>
+              <SelectItem value="6">6 People</SelectItem>
+              <SelectItem value="8">8 People</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
       <div className="space-y-2">
-        <Label htmlFor="guests">Number of Guests</Label>
-        <Input
-          id="guests"
-          type="number"
-          min="1"
-          max="10"
-          value={guests}
-          onChange={(e) => setGuests(e.target.value)}
-          className="w-full"
-        />
+        <Label>Table Number (Optional)</Label>
+        <Select value={tableNumber} onValueChange={setTableNumber}>
+          <SelectTrigger>
+            <SelectValue placeholder="Select table (optional)" />
+          </SelectTrigger>
+          <SelectContent>
+            {tables.map((table) => (
+              <SelectItem key={table} value={table.toString()}>
+                Table {table}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="space-y-2">
