@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -153,20 +152,7 @@ const Cart = () => {
 
       if (orderItemsError) throw orderItemsError;
 
-      // Clear cart after successful order
-      const { error: clearCartError } = await supabase
-        .from("cart_items")
-        .delete()
-        .eq("user_id", user.id);
-
-      if (clearCartError) throw clearCartError;
-
-      queryClient.invalidateQueries({ queryKey: ["cart"] });
-      toast({
-        title: "Order placed successfully",
-        description: "Thank you for your order!",
-      });
-      navigate("/checkout/success");
+      navigate("/checkout");
     } catch (error: any) {
       toast({
         title: "Error",
@@ -309,4 +295,3 @@ const Cart = () => {
 };
 
 export default Cart;
-
