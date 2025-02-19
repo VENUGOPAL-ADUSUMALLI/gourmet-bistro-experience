@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { MenuCard } from "@/components/MenuCard";
 import { ReservationForm } from "@/components/ReservationForm";
 import { Button } from "@/components/ui/button";
@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { ShoppingCart } from "lucide-react";
+import { ShoppingCart, MapPin } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/providers/AuthProvider";
 import { useQuery } from "@tanstack/react-query";
@@ -19,6 +19,7 @@ const Index = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const reservationsRef = useRef<HTMLDivElement>(null);
 
   const { data: cartItemsCount = 0 } = useQuery({
     queryKey: ["cartCount", user?.id],
@@ -55,14 +56,27 @@ const Index = () => {
     fetchMenuItems();
   }, [toast]);
 
+  const handleReservationClick = () => {
+    setActiveTab("reservations");
+    reservationsRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
   return (
     <div className="min-h-screen">
-      {/* Cart Icon */}
-      <div className="fixed top-4 right-4 z-50">
+      {/* Navigation Icons */}
+      <div className="fixed top-4 right-4 z-50 flex gap-4">
         <Button
           variant="outline"
           size="icon"
-          className="relative"
+          className="bg-white"
+          onClick={() => window.open("https://www.google.com/maps/place/Kapil+Kavuri+Hub/@17.4215689,78.3480865,17z/data=!3m1!4b1!4m6!3m5!1s0x3bcb9387a30a1d07:0xd6bdac9777579460!8m2!3d17.4215689!4d78.3480865!16s%2Fg%2F11gdkpk_nz?entry=ttu&g_ep=EgoyMDI1MDIxMi4wIKXMDSoASAFQAw%3D%3D", "_blank")}
+        >
+          <MapPin className="h-6 w-6" />
+        </Button>
+        <Button
+          variant="outline"
+          size="icon"
+          className="relative bg-white"
           onClick={() => navigate("/cart")}
         >
           <ShoppingCart className="h-6 w-6" />
@@ -90,7 +104,7 @@ const Index = () => {
             Experience culinary excellence in every bite
           </p>
           <Button 
-            onClick={() => setActiveTab("reservations")}
+            onClick={handleReservationClick}
             size="lg"
             className="bg-gold hover:bg-gold-dark text-white"
           >
@@ -100,7 +114,7 @@ const Index = () => {
       </section>
 
       {/* Main Content */}
-      <section className="container mx-auto py-16 px-4">
+      <section ref={reservationsRef} className="container mx-auto py-16 px-4">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
           <TabsList className="grid w-full grid-cols-2 max-w-md mx-auto">
             <TabsTrigger value="menu">Menu</TabsTrigger>
@@ -143,4 +157,3 @@ const Index = () => {
 };
 
 export default Index;
-

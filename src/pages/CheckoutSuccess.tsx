@@ -2,35 +2,31 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Check } from "lucide-react";
+import { CheckCircle } from "lucide-react";
 
 const CheckoutSuccess = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Clear any cart-related state if needed
+    // Clear any payment-related state if needed
   }, []);
 
   return (
-    <div className="container mx-auto px-4 py-16">
-      <Card className="max-w-md mx-auto p-8 text-center">
-        <div className="mb-6">
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
-            <Check className="w-8 h-8 text-green-600" />
-          </div>
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="text-center space-y-6 p-6">
+        <div className="flex justify-center">
+          <CheckCircle className="h-24 w-24 text-green-500" />
         </div>
-        <h1 className="text-2xl font-bold mb-4">Order Confirmed!</h1>
-        <p className="text-muted-foreground mb-8">
-          Thank you for your order. We'll start preparing your delicious meal
-          right away!
+        <h1 className="text-3xl font-bold">Order Confirmed!</h1>
+        <p className="text-muted-foreground max-w-md">
+          Thank you for your order. We'll begin preparing your delicious meal right away.
         </p>
         <div className="space-y-4">
-          <Button className="w-full" onClick={() => navigate("/")}>
-            Return to Menu
+          <Button onClick={() => navigate("/")} className="w-full">
+            Return to Home
           </Button>
         </div>
-      </Card>
+      </div>
     </div>
   );
 };
