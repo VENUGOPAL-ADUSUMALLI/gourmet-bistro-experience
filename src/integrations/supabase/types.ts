@@ -187,29 +187,35 @@ export type Database = {
       }
       reservations: {
         Row: {
+          capacity: number | null
           created_at: string
           date: string
           guests: number
           id: string
           status: string | null
+          table_number: number | null
           time: string
           user_id: string | null
         }
         Insert: {
+          capacity?: number | null
           created_at?: string
           date: string
           guests: number
           id?: string
           status?: string | null
+          table_number?: number | null
           time: string
           user_id?: string | null
         }
         Update: {
+          capacity?: number | null
           created_at?: string
           date?: string
           guests?: number
           id?: string
           status?: string | null
+          table_number?: number | null
           time?: string
           user_id?: string | null
         }
